@@ -1,0 +1,135 @@
+library(ggplot2)
+library(Stat2Data)
+library(broom)
+library(AICcmodavg)
+library(plotrix)
+## 2.13
+# Produce a scatterplot
+data("BrainpH")
+brain = BrainpH
+View(brain)
+ggplot(brain, aes(x = Age, y = pH)) + 
+  geom_point() +
+  stat_smooth(method = lm, se = FALSE)
+brainLM = lm(pH ~ Age, data = brain)
+summary(brainLM)
+# anova test
+brainAN = aov(pH ~ Age, data = brain)
+summary(brainAN)
+
+## 2.15
+cereal = read.csv("~/desktop/Cereal.csv")
+View(cereal)
+# produce a scatterplot
+ggplot(cereal, aes(x = Sugar, y = Calories)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# anova test
+cerealAN = aov(Calories ~ Sugar, data = cereal)
+summary(cerealAN)
+# linear model
+cerealLM = lm(Calories ~ Sugar, data = cereal)
+summary(cerealLM)
+
+
+## 2.17
+lewy = read.csv("~/desktop/LewyDLBad.csv")
+# create scatterplot
+ggplot(lewy, aes(x = APC, y = MMSE)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# linear model
+lewylm = lm(MMSE ~ APC, data = lewy)
+summary(lewylm)
+# residual model
+lewyResid = resid(lewylm)
+plot(fitted(lewylm), lewyResid, main = "Residuals without log transformation")
+abline(0,0)
+hist(lewyResid, main = "No log transformation")
+# quantile-quantile plot
+qqnorm(lewyResid, pch = 1, frame = FALSE)
+qqline(lewyResid)
+# add log transformation to residual histogram
+hist(log(lewyResid), main = "Log Transformation", breaks = 10)
+
+## 2.18
+spar = read.csv("~/desktop/Sparrows.csv")
+ggplot(spar, aes(x = WingLength, y = Weight)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# linear summary
+sparlm = lm(Weight ~ WingLength, data = spar)
+summary(sparlm)
+
+
+## 2.20
+rail = read.csv("~/desktop/RailsTrails.csv")
+# linear regression model
+ggplot(rail, aes(x = squarefeet, y = adj2007)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# summary
+raillm = lm(formula = adj2007 ~ squarefeet, data = rail)
+summary(raillm)
+# residual plot
+railResid = resid(raillm)
+plot(fitted(raillm), railResid)
+abline(0,0)
+# quantile-quantile plot
+qqnorm(railResid, frame = FALSE)
+qqline(railResid)
+
+
+## 2.24
+met = read.csv("~/desktop/MetRate.csv")
+View(met)
+# least squares regression line
+ggplot(data = met, aes(x = LogBodySize, y = LogMrate)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# linear summary
+metlm = lm(LogMrate ~ LogBodySize, data = met)
+summary(metlm)
+# anova
+metan = aov(LogMrate ~ LogBodySize, data = met)
+summary(metan)
+
+## 2.26
+leaf = read.csv("~/desktop/LeafWidth.csv")
+# find r value
+cor(leaf$Width, leaf$Year)
+leaflm = lm(Year ~ Width, data = leaf)
+summary(leaflm)
+# anova
+leafan = aov(Year ~ Width, data = leaf)
+summary(leafan)
+
+## 2.40
+grin = read.csv("~/desktop/Grinnell.csv")
+# linear summary
+grinlm = lm(SalePrice ~ ListPrice, data = grin)
+summary(grinlm)
+# anova
+grinan = aov(SalePrice ~ ListPrice, data = grin)
+summary(grinan)
+
+## 2.47
+train = read.csv("~/desktop/RailsTrails.csv")
+View(train)
+# linear model
+trainlm = lm(adj2007 ~ distance, data = train)
+summary(trainlm)
+ggplot(data = train, aes(x = distance, y = adj2007)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE)
+# create prediction interval
+trainpi = data.frame(distance = 0.5)
+predict(trainlm, trainpi, interval = "predict")
+# residuals
+trainResid = resid(trainlm)
+plot(fitted(trainlm), trainResid)
+abline(0,0)
+# part d prediction
+dtrainlm = lm(distance ~ adj2007, data = train)
+summary(dtrainlm)
+
