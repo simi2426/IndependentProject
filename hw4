@@ -1,0 +1,172 @@
+library(car)
+library(ggplot2)
+library(dplyr)
+library(leaps)
+install.packages("MASS")
+library(MASS)
+## 4.2
+peak = read.csv("~/downloads/HighPeaks.csv")
+attach(peak)
+# a
+plot(peak$Elevation, peak$Time, pch=16)
+cor(peak$Elevation, peak$Time)
+# b
+peakmr = lm(Time ~ Elevation + Length, data = peak)
+summary(peakmr)
+elevation = lm(Time ~ Elevation, data = peak)
+summary(elevation)
+length = lm(Time ~ Length, data = peak)
+summary(length)
+# c
+# residuals + graph of time on length
+advp1 = lm(Time ~ Length, data = peak)
+cor(peak$Time, peak$Length)
+resadvp1 = resid(advp1)
+plot(fitted(advp1), resadvp1, xlab = "Predicted Time",
+     ylab = "Resid1", main = "Residuals of Time on Length")
+abline(0,0)
+summary(resadvp1)
+summary(advp1)
+plot(peak$Length, peak$Time, xlab = "Length", ylab = "Time",
+     main = "Length and Time", abline(lm(peak$Time ~ peak$Length)))
+# residuals + graph of time on elevation
+advp2 = lm(Time ~ Elevation, data = peak)
+cor(peak$Time, peak$Elevation)
+resadvp2 = resid(advp2)
+plot(fitted(advp2), resadvp2, xlab = "Predicted Time",
+     ylab = "Resid2", main = "Residuals of Time on Elevation")
+abline(0,0)
+plot(peak$Elevation, peak$Time,  xlab = "Elevation", ylab = "Time",
+     main = "Elevation and Time", abline(lm(peak$Time ~ peak$Elevation)))
+summary(advp2)
+# added variable plots
+error1 = advp1$residuals
+error2 = advp2$residuals
+error1.error2lm = lm(error1 ~ error2)
+error1.error2lm
+plot(error2, error1, main = "Added Variable Plot")
+
+abline(error1.error2lm)
+abline(0,0)
+cor(error1, error2)
+cor(resadvp1, resadvp2)
+# build in function
+avPlots(advp1, col = 1)
+# mr model
+mrpeak = lm(Time ~ Elevation + Length, data = peak)
+summary(mrpeak)
+res = avPlots(lm(Time ~ Elevation + Length, data = peak))
+fit = lsfit(res$Elevation[,1], res$Elevation[,2])
+fit$coefficients
+fitlength = lsfit(res$Length[,1], res$Length[,2])
+fitlength$coefficients
+
+## 4.3
+mlb.df = read.csv("~/downloads/MLBStandings2016.csv")
+View(mlb.df)
+names(mlb.df)
+pairs(mlb.df[,c(3,4,5,6,7,8,9)])
+fullmlb = lm(WinPct ~ BattingAverage + Runs + Hits + HR + Doubles + Triples + RBI + SB + OBP + SLG + ERA + HitsAllowed + Walks + StrikeOuts + Saves + WHIP, data = mlb.df)
+summary(fullmlb)
+# a - forward selection
+mlb.df = mlb.df %>%
+  select(-Wins, -Losses, -Team)
+full.model = lm(WinPct ~ ., data = mlb.df)
+forward = regsubsets(WinPct ~ ., data=mlb.df, nbest = 1, nvmax = 4, method = "forward")
+with(summary(forward), data.frame(cp, outmat))
+forwardmodel = lm(WinPct ~ Runs + ERA + Saves + WHIP, data = mlb.df)
+summary(forwardmodel)
+# b - backward elimination
+backward = regsubsets(WinPct ~ ., data = mlb.df, nbest = 1, nvmax = 4, method = "backward")
+summary(backward)
+with(summary(backward), data.frame(cp,outmat))
+backwardmodel = lm(WinPct ~ Saves + WHIP + BattingAverage + Runs, data = mlb.df)
+summary(backwardmodel)
+coef(backwardmodel)
+# c - best subsets method
+best = regsubsets(WinPct ~ ., data = mlb.df, method = "exhaustive")
+with(summary(best), data.frame(rsq, adjr2, cp, rss, outmat))
+bestmodel = lm(WinPct ~ Runs + Saves + WHIP + BattingAverage, data = mlb.df)
+summary(bestmodel)
+# d - find mallow's CP
+ols_mallows_cp(forwardmodel, full.model)
+ols_mallows_cp(backwardmodel, full.model)
+ols_mallows_cp(bestmodel, full.model)
+
+## 4.7
+baseball = read.csv("~/downloads/BaseballTimes2017.csv")
+baseball = baseball %>%
+  select(-Game, -League)
+# a - maximize R^2
+maxrsq = lm(Time ~ Runs + Margin + Pitchers + Attendance, data = baseball)
+summary(maxrsq)
+# b - maximize adjusted R^2
+bestbball = regsubsets(Time ~ ., data = baseball, method = "exhaustive")
+with(summary(bestbball), data.frame(rsq, adjr2, cp, rss, outmat))
+ok1 = lm(Time ~ Runs + Attendance, data = baseball)
+summary(ok1)
+# c - minimize Mallow's Cp
+ols_mallows_cp(ok1, maxrsq)
+
+## 4.11
+rel = read.csv("~/downloads/RelGDP.csv")
+View(rel)
+# a
+log.gdp = log(rel$GDP)
+plot(log.gdp, rel$Religiosity)
+# b
+logrel = lm(log.gdp ~ Religiosity, data = rel)
+summary(logrel)
+# d
+studresids = studres(logrel)
+plot(rel$Religiosity, studresids)
+
+## 4.17
+baseball = read.csv("~/downloads/BaseballTimes2017.csv")
+cor(baseball$Runs, baseball$Time)
+x = baseball$Runs
+y = baseball$Time
+originalR = cor(x,y)
+newY = sample(baseball$Time)
+cor(x, newY)
+# repeat sampling procedure
+n = 5000
+permcorr = as.numeric(0)
+for (i in 1:n) {
+  newY = sample(baseball$Time)
+  permcorr[i] = cor(x, newY)
+}
+permcorr[1:5]
+hist(permcorr)
+upper = sum(permcorr>abs(originalR))
+upper
+lower = sum(permcorr<(-abs(originalR)))
+lower
+pvalue = (upper + lower) / n
+pvalue
+
+## 4.20
+peak = read.csv("~/downloads/HighPeaks.csv")
+# a
+foura = lm(Length ~ Time, data = peak)
+summary(foura)
+confint(foura, level = 0.90)
+# b - bootstrap distribution
+index = 1:46
+bootsample = sample(index, replace = TRUE)
+head(peak[bootsample,])
+bootmodel = lm(Length ~ Time, data = peak[bootsample,])
+summary(bootmodel)
+bootbetas = matrix(0,nrow = 5000, ncol = 2)
+for (i in 1:5000) {
+  bootsample = sample(index, replace = TRUE)
+  bootmodel = lm(Length ~ Time, data = peak[bootsample,])
+  bootbetas[i,] = coef(bootmodel)
+}
+hist(bootbetas[,2])
+# c
+sd(bootbetas[,2])
+mean(bootbetas[,2])
+3 d
+quantile(bootbetas[,2],.05)
+quantile(bootbetas[,2], .95)
