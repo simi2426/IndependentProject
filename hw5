@@ -1,0 +1,47 @@
+## Chapter 5 Homework
+install.packages("onewaytests")
+library(onewaytests)
+library(data.table)
+library(dplyr)
+
+## 5.27
+mouse = read.csv("~/downloads/MouseBrain.csv")
+View(mouse)
+plot(factor(mouse$Genotype), mouse$Contacts)
+# a
+aggregate(mouse$Contacts, list(mouse$Genotype), FUN = mean)
+mouseaov = aov(Contacts ~ Genotype, data = mouse)
+summary(mouseaov)
+# b - residuals
+# qqplot
+qqnorm(mouse$Contacts, pch = 16)
+qqline(mouse$Contacts)
+# Bartlett's Homogeneity Test in R
+homog.test(Contacts ~ Genotype, data = mouse)
+
+## 5.32
+hawk = read.csv("~/downloads/Hawks.csv")
+View(hawk)
+# a
+plot(factor(hawk$Species), hawk$Weight)
+# b
+aggregate(hawk$Weight, list(hawk$Species), FUN = sd, na.rm = TRUE)
+
+## 5.38
+menin = read.csv("~/downloads/Meniscus.csv")
+meninone = aov(Stiffness ~ factor(Method), data = menin)
+## qqplot and residuals
+plot(meninone)
+# boxplot
+ggplot(menin) + geom_boxplot(aes(x = factor(Method), y = Stiffness))
+# c
+summary(meninone)
+
+## 5.52
+words = read.csv("~/downloads/WordsWithFriends.csv")
+View(words)
+# a
+wordsone = aov(WinMargin ~ factor(BlanksNumber), data = words)
+plot(wordsone)
+ggplot(words) + geom_boxplot(aes(x = factor(BlanksNumber), y = WinMargin))
+summary(wordsone)
